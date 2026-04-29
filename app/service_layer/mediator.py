@@ -23,13 +23,13 @@ from service_layer.exceptions.mediator import (
 )
 
 
-@dataclass
+@dataclass(eq=False)
 class Mediator:
-    events_map: dict[ET, EventHandler] = field(
+    events_map: dict[ET, list[EventHandler]] = field(
         default_factory=lambda: defaultdict(list),
         kw_only=True,
     )
-    commands_map: dict[CT, CommandHandler] = field(
+    commands_map: dict[CT, list[CommandHandler]] = field(
         default_factory=lambda: defaultdict(list),
         kw_only=True,
     )

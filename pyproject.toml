@@ -1,26 +1,35 @@
-[project]
-name = "fastapi-kafka-chat"
+[tool.poetry]
+name = "fastapi-mongodb-kafka-boilerplate"
 version = "0.1.0"
+description = ""
 readme = "README.md"
-requires-python = ">=3.12"
-dependencies = [
-    "fastapi (>=0.128.0,<0.129.0)",
-    "uvicorn (>=0.40.0,<0.41.0)",
-    "motor (>=3.7.1,<4.0.0)",
-    "ipython (>=9.9.0,<10.0.0)"
-]
+package-mode = false
 
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.136.1"
+uvicorn = "^0.46.0"
+motor = "^3.7.1"
+ipython = "^9.13.0"
+punq = "^0.7.0"
+httpx = "^0.28.1"
 
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.group.dev.dependencies]
-pre-commit = "^4.5.1"
-isort = "^7.0.0"
-pytest = "^9.0.2"
-faker = "^40.1.0"
+pytest = "^9.0.3"
 pytest-asyncio = "^1.3.0"
+faker = "^40.15.0"
+
+
+[tool.poetry.group.lint.dependencies]
+pre-commit = "^4.6.0"
+isort = "^8.0.1"
+flake8 = "^7.3.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
 
 [tool.isort]
 multi_line_output=3

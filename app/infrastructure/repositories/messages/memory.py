@@ -1,7 +1,10 @@
-from dataclasses import dataclass, field
+from dataclasses import (
+    dataclass,
+    field,
+)
 
 from domain.entities.messages import Chat
-from infrastructure.repositories.base import BaseChatRepository
+from infrastructure.repositories.messages.base import BaseChatRepository
 
 
 @dataclass

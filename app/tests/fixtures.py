@@ -1,7 +1,10 @@
-from punq import Container, Scope
+from punq import (
+    Container,
+    Scope,
+)
 
-from infrastructure.repositories.base import BaseChatRepository
-from infrastructure.repositories.memory import MemoryChatRepository
+from infrastructure.repositories.messages.base import BaseChatRepository
+from infrastructure.repositories.messages.memory import MemoryChatRepository
 from project.containers import _init_container
 
 

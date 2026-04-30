@@ -1,10 +1,9 @@
-from faker import Faker
-import faker
 import pytest
+from faker import Faker
 
 from domain.entities.messages import Chat
 from domain.values.messages import Title
-from infrastructure.repositories.base import BaseChatRepository
+from infrastructure.repositories.messages.base import BaseChatRepository
 from service_layer.commands.messages import CreateChatCommand
 from service_layer.exceptions.messages import ChatWithThatTitleAlreadyExistsException
 from service_layer.mediator import Mediator

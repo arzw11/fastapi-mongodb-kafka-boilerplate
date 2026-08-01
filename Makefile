@@ -26,6 +26,10 @@ app-down:
 storages-down:
 	${DC} -f ${STORAGES_FILE} down
 
+.PHONY: all-down
+all-down:
+	${DC} -f ${STORAGES_FILE} -f ${APP_FILE} ${ENV} down
+
 .PHONY: app-shell
 app-shell:
 	${EXEC} ${APP_CONTAINER} bash

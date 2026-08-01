@@ -1,12 +1,25 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    status,
+)
 
 from punq import Container
 
-from application.api.messages.schemas import CreateChatInSchema, CreateChatOutSchema
+from application.api.messages.schemas import (
+    CreateChatInSchema,
+    CreateChatOutSchema,
+    CreateMessageResponseSchema,
+    CreateMessageSchema,
+)
 from application.api.schemas import ErrorSchema
 from domain.exceptions.base import ApplicationException
 from project.containers import get_container
-from service_layer.commands.messages import CreateChatCommand
+from service_layer.commands.messages import (
+    CreateChatCommand,
+    CreateMessageCommand,
+)
 from service_layer.mediator import Mediator
 
 
@@ -38,3 +51,36 @@ async def create_chat_handler(
         )
 
     return CreateChatOutSchema.from_entity(chat)
+
+
+@router.post(
+    '/{chat_oid}/messages',
+    status_code=status.HTTP_201_CREATED,
+    description='Эндпоинт на добавление нового сообщения в чат с переданным ObjectID',
+    responses={
+        status.HTTP_201_CREATED: {'model': CreateMessageSchema},
+        status.HTTP_400_BAD_REQUEST: {'model': ErrorSchema},
+    },
+)
+async def create_message_handler(
+    chat_oid: str,
+    schema: CreateMessageSchema,
+    container: Container = Depends(get_container),
+) -> CreateMessageResponseSchema:
+    mediator: Mediator = container.resolve(Mediator)
+
+    try:
+        message, *_ = await mediator.handle_command(
+            CreateMessageCommand(
+                text=schema.text,
+                chat_oid=chat_oid,
+            ),
+        )
+
+    except ApplicationException as exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={'error': exception.message},
+        )
+
+    return CreateMessageResponseSchema.from_entity(message)

@@ -1,13 +1,25 @@
 from dataclasses import dataclass
 
-from domain.entities.messages import Chat
-from domain.values.messages import Title
-from infrastructure.repositories.messages.base import BaseChatRepository
+from domain.entities.messages import (
+    Chat,
+    Message,
+)
+from domain.values.messages import (
+    Text,
+    Title,
+)
+from infrastructure.repositories.messages.base import (
+    BaseChatsRepository,
+    BaseMessagesRepository,
+)
 from service_layer.commands.base import (
     BaseCommand,
     CommandHandler,
 )
-from service_layer.exceptions.messages import ChatWithThatTitleAlreadyExistsException
+from service_layer.exceptions.messages import (
+    ChatNotFoundException,
+    ChatWithThatTitleAlreadyExistsException,
+)
 
 
 @dataclass(frozen=True)
@@ -17,7 +29,7 @@ class CreateChatCommand(BaseCommand):
 
 @dataclass(frozen=True)
 class CreateChatCommandHandler(CommandHandler[CreateChatCommand, Chat]):
-    chat_repository: BaseChatRepository
+    chat_repository: BaseChatsRepository
 
     async def handle(self, command: CreateChatCommand) -> Chat:
         if await self.chat_repository.check_chat_exists_by_title(title=command.title):
@@ -30,3 +42,33 @@ class CreateChatCommandHandler(CommandHandler[CreateChatCommand, Chat]):
         await self.chat_repository.add_chat(chat=new_chat)
 
         return new_chat
+
+
+@dataclass(frozen=True)
+class CreateMessageCommand(BaseCommand):
+    text: str
+    chat_oid: str
+
+
+@dataclass(frozen=True)
+class CreateMessageCommandHandler(CommandHandler[CreateMessageCommand, Message]):
+    chat_repository: BaseChatsRepository
+    message_repository: BaseMessagesRepository
+
+    async def handle(self, command: CreateMessageCommand) -> Message:
+        chat: Chat = await self.chat_repository.get_chat_by_oid(oid=command.chat_oid)
+
+        if not chat:
+            raise ChatNotFoundException(chat_oid=command.chat_oid)
+
+        message = Message(
+            text=Text(command.text),
+            chat_oid=command.chat_oid,
+        )
+        chat.add_message(message)
+        await self.message_repository.add_message(
+            chat_oid=command.chat_oid,
+            message=message,
+        )
+
+        return message

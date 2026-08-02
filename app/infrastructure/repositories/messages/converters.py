@@ -7,7 +7,10 @@ from domain.entities.messages import (
     Chat,
     Message,
 )
-from domain.values.messages import Text
+from domain.values.messages import (
+    Text,
+    Title,
+)
 
 
 def convert_message_entity_to_document(message: Message) -> dict:
@@ -39,7 +42,7 @@ def convert_message_document_to_entity(message_document: Mapping[str, Any]) -> M
 
 def convert_chat_document_to_entity(chat_document: Mapping[str, Any]) -> Chat:
     return Chat(
-        title=chat_document['title'],
+        title=Title(chat_document['title']),
         oid=chat_document['oid'],
         created_at=chat_document['created_at'],
         messages={

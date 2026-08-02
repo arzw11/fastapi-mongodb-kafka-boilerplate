@@ -22,6 +22,10 @@ from service_layer.commands.messages import (
     CreateMessageCommandHandler,
 )
 from service_layer.mediator import Mediator
+from service_layer.queries.messages import (
+    GetChatDetailQuery,
+    GetChatDetailQueryHandler,
+)
 
 
 @lru_cache(1)
@@ -83,6 +87,11 @@ def _init_container() -> Container:
                     message_repository=container.resolve(BaseMessagesRepository),
                 ),
             ],
+        )
+
+        mediator.register_query(
+            GetChatDetailQuery,
+            [GetChatDetailQueryHandler(chat_repository=container.resolve(BaseChatsRepository))],
         )
 
         return mediator

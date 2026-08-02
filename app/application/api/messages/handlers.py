@@ -8,6 +8,7 @@ from fastapi import (
 from punq import Container
 
 from application.api.messages.schemas import (
+    ChatDetailSchema,
     CreateChatInSchema,
     CreateChatOutSchema,
     CreateMessageResponseSchema,
@@ -21,6 +22,7 @@ from service_layer.commands.messages import (
     CreateMessageCommand,
 )
 from service_layer.mediator import Mediator
+from service_layer.queries.messages import GetChatDetailQuery
 
 
 router = APIRouter(tags=['Chats'])
@@ -84,3 +86,30 @@ async def create_message_handler(
         )
 
     return CreateMessageResponseSchema.from_entity(message)
+
+
+@router.get(
+    '/{chat_oid}/',
+    status_code=status.HTTP_200_OK,
+    description='Получить информацию о чате и все сообщения в нём.',
+    responses={
+        status.HTTP_200_OK: {'model': ChatDetailSchema},
+        status.HTTP_400_BAD_REQUEST: {'model': ErrorSchema},
+    },
+)
+async def get_messages_w_chat_handler(
+    chat_oid: str,
+    container: Container = Depends(get_container),
+) -> ChatDetailSchema:
+    mediator: Mediator = container.resolve(Mediator)
+
+    try:
+        chat, *_ = await mediator.handle_query(GetChatDetailQuery(chat_oid=chat_oid))
+
+    except ApplicationException as exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={'error': exception.message},
+        )
+
+    return ChatDetailSchema.from_entity(chat=chat)

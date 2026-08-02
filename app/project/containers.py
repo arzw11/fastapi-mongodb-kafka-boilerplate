@@ -58,7 +58,7 @@ def _init_container() -> Container:
         return MongoDBMessagesRepository(
             mongo_db_client=mongodb_client,
             mongo_db_db_title=settings.MONGODB_CHAT_DATABASE,
-            mongo_db_collection_title=settings.MONGODB_CHAT_COLLECTION,
+            mongo_db_collection_title=settings.MONGODB_MESSAGES_COLLECTION,
         )
 
     container.register(

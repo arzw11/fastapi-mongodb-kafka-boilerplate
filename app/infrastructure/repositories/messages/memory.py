@@ -23,5 +23,14 @@ class MemoryChatRepository(BaseChatsRepository):
         except StopIteration:
             return False
 
+    async def get_chat_by_oid(self, oid: str) -> Chat | None:
+        try:
+            return bool(
+                next(chat for chat in self._chats if chat.oid == oid),
+            )
+
+        except StopIteration:
+            return False
+
     async def add_chat(self, chat: Chat) -> None:
         self._chats.append(chat)

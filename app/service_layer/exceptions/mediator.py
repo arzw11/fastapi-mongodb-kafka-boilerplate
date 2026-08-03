@@ -22,7 +22,7 @@ class CommandHandlersNotRegisteredException(ServiceException):
 
 
 @dataclass(eq=False)
-class QueryHandlersNotRegisteredException(ServiceException):
+class QueryHandlerNotRegisteredException(ServiceException):
     query_type: type
 
     @property

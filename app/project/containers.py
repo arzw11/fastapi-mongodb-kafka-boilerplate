@@ -25,6 +25,8 @@ from service_layer.mediator import Mediator
 from service_layer.queries.messages import (
     GetChatDetailQuery,
     GetChatDetailQueryHandler,
+    GetMessagesQuery,
+    GetMessagesQueryHandler,
 )
 
 
@@ -91,7 +93,11 @@ def _init_container() -> Container:
 
         mediator.register_query(
             GetChatDetailQuery,
-            [GetChatDetailQueryHandler(chat_repository=container.resolve(BaseChatsRepository))],
+            GetChatDetailQueryHandler(chat_repository=container.resolve(BaseChatsRepository)),
+        )
+        mediator.register_query(
+            GetMessagesQuery,
+            GetMessagesQueryHandler(messages_repository=container.resolve(BaseMessagesRepository)),
         )
 
         return mediator

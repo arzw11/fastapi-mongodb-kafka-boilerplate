@@ -20,7 +20,7 @@ from service_layer.events.base import (
 from service_layer.exceptions.mediator import (
     CommandHandlersNotRegisteredException,
     EventHandlersNotRegisteredException,
-    QueryHandlersNotRegisteredException,
+    QueryHandlerNotRegisteredException,
 )
 from service_layer.queries.base import (
     BaseQuery,
@@ -40,8 +40,8 @@ class Mediator:
         default_factory=lambda: defaultdict(list),
         kw_only=True,
     )
-    queries_map: dict[QT, list[QueryHandler]] = field(
-        default_factory=lambda: defaultdict(list),
+    queries_map: dict[QT, QueryHandler] = field(
+        default_factory=dict,
         kw_only=True,
     )
 
@@ -51,8 +51,8 @@ class Mediator:
     def register_command(self, command: CT, command_handlers: Iterable[CommandHandler[CT, CR]]):
         self.commands_map[command].extend(command_handlers)
 
-    def register_query(self, query: QT, query_handlers: Iterable[QueryHandler[QT, QR]]):
-        self.queries_map[query].extend(query_handlers)
+    def register_query(self, query: QT, query_handler: QueryHandler[QT, QR]):
+        self.queries_map[query] = query_handler
 
     async def publish(self, events: Iterable[BaseEvent]) -> Iterable[ER]:
         event_type = events.__class__
@@ -76,11 +76,11 @@ class Mediator:
 
         return [await handler.handle(command) for handler in handlers]
 
-    async def handle_query(self, query: BaseQuery) -> Iterable[QR]:
+    async def handle_query(self, query: BaseQuery) -> QR:
         query_type = query.__class__
-        handlers = self.queries_map.get(query_type)
+        handler = self.queries_map.get(query_type)
 
-        if not handlers:
-            raise QueryHandlersNotRegisteredException(query_type=query_type)
+        if handler is None:
+            raise QueryHandlerNotRegisteredException(query_type=query_type)
 
-        return [await handler.handle(query) for handler in handlers]
+        return await handler.handle(query)

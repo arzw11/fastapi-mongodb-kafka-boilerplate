@@ -7,12 +7,15 @@ from fastapi import (
 
 from punq import Container
 
+from application.api.messages.filters import GetMessagesFilters
 from application.api.messages.schemas import (
     ChatDetailSchema,
     CreateChatInSchema,
     CreateChatOutSchema,
     CreateMessageResponseSchema,
     CreateMessageSchema,
+    GetMessagesQueryResponseSchema,
+    MessageDetailSchema,
 )
 from application.api.schemas import ErrorSchema
 from domain.exceptions.base import ApplicationException
@@ -22,7 +25,10 @@ from service_layer.commands.messages import (
     CreateMessageCommand,
 )
 from service_layer.mediator import Mediator
-from service_layer.queries.messages import GetChatDetailQuery
+from service_layer.queries.messages import (
+    GetChatDetailQuery,
+    GetMessagesQuery,
+)
 
 
 router = APIRouter(tags=['Chats'])
@@ -104,7 +110,7 @@ async def get_messages_w_chat_handler(
     mediator: Mediator = container.resolve(Mediator)
 
     try:
-        chat, *_ = await mediator.handle_query(GetChatDetailQuery(chat_oid=chat_oid))
+        chat = await mediator.handle_query(GetChatDetailQuery(chat_oid=chat_oid))
 
     except ApplicationException as exception:
         raise HTTPException(
@@ -113,3 +119,33 @@ async def get_messages_w_chat_handler(
         )
 
     return ChatDetailSchema.from_entity(chat=chat)
+
+
+@router.get(
+    '/{chat_oid}/messages/',
+    status_code=status.HTTP_200_OK,
+    description='Все отправленные сообщения в чате',
+    responses={
+        status.HTTP_200_OK: {'model': GetMessagesQueryResponseSchema},
+        status.HTTP_400_BAD_REQUEST: {'model': ErrorSchema},
+    },
+)
+async def get_chat_messages_handler(
+    chat_oid: str,
+    filters: GetMessagesFilters = Depends(),
+    container: Container = Depends(get_container),
+) -> GetMessagesQueryResponseSchema:
+    mediator: Mediator = container.resolve(Mediator)
+
+    try:
+        messages, count = await mediator.handle_query(GetMessagesQuery(chat_oid=chat_oid, filters=filters.to_infra()))
+
+    except ApplicationException as exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={'error': exception.message})
+
+    return GetMessagesQueryResponseSchema(
+        count=count,
+        limit=filters.limit,
+        offset=filters.offset,
+        items=[MessageDetailSchema.from_entity(message) for message in messages],
+    )

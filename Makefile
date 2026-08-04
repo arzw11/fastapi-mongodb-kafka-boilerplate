@@ -4,6 +4,7 @@ LOGS = docker logs
 ENV = --env-file .env
 APP_FILE = docker_compose/app.yaml
 STORAGES_FILE = docker_compose/storages.yaml
+KAFKA = docker_compose/kafka.yaml
 APP_CONTAINER = main-app
 
 .PHONY: app
@@ -16,7 +17,7 @@ storages:
 
 .PHONY: all
 all:
-	${DC} -f ${STORAGES_FILE} -f ${APP_FILE} ${ENV} up --build -d
+	${DC} -f ${STORAGES_FILE} -f ${APP_FILE} -f ${KAFKA} ${ENV} up --build -d
 
 .PHONY: app-down
 app-down:
@@ -28,7 +29,7 @@ storages-down:
 
 .PHONY: all-down
 all-down:
-	${DC} -f ${STORAGES_FILE} -f ${APP_FILE} ${ENV} down
+	${DC} -f ${STORAGES_FILE} -f ${APP_FILE} -f ${KAFKA} ${ENV} down
 
 .PHONY: app-shell
 app-shell:
@@ -37,6 +38,18 @@ app-shell:
 .PHONY: app-logs
 app-logs:
 	${LOGS} ${APP_CONTAINER} -f
+
+.PHONE: kafka
+kafka:
+	${DC} -f ${KAFKA} ${ENV} up --build -d
+
+.PHONY: kafka-logs
+kafka-logs:
+	${DC} -f ${KAFKA} logs -f 
+
+.PHONE: kafka-down
+kafka-down:
+	${DC} -f ${KAFKA} ${ENV} down
 
 .PHONY: test
 test:

@@ -11,6 +11,8 @@ services:
       - ../.env
     volumes:
       - ../app/:/app/
+    depends_on:
+      - kafka
     networks:
       - backend
 

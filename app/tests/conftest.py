@@ -2,7 +2,7 @@ import pytest
 from punq import Container
 
 from infrastructure.repositories.messages.base import BaseChatsRepository
-from service_layer.mediator import Mediator
+from service_layer.mediator.base import Mediator
 from tests.fixtures import init_dummy_container
 
 

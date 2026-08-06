@@ -24,7 +24,7 @@ from service_layer.commands.messages import (
     CreateChatCommand,
     CreateMessageCommand,
 )
-from service_layer.mediator import Mediator
+from service_layer.mediator.base import Mediator
 from service_layer.queries.messages import (
     GetChatDetailQuery,
     GetMessagesQuery,

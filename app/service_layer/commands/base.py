@@ -9,7 +9,7 @@ from typing import (
     TypeVar,
 )
 
-from service_layer.mediator import Mediator
+from service_layer.mediator.event import EventMediator
 
 
 @dataclass(frozen=True)
@@ -23,7 +23,7 @@ CR = TypeVar('CR', bound=Any)
 
 @dataclass(frozen=True)
 class CommandHandler(ABC, Generic[CT, CR]):
-    _mediator: Mediator
+    _mediator: EventMediator
 
     @abstractmethod
     async def handle(self, command: CT) -> CR:

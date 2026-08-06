@@ -1,11 +1,15 @@
 from pydantic import ConfigDict
 
+from project.configs.database import MongoSettings
 from project.configs.general import GeneralSettings
-from project.configs.mongo import MongoSettings
+from project.configs.logger import LoggingSettings
+from project.configs.message_broker import KafkaSettings
 
 
 class Settings(
+    LoggingSettings,
     GeneralSettings,
+    KafkaSettings,
     MongoSettings,
 ):
     model_config = ConfigDict(

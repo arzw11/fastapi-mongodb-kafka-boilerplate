@@ -19,9 +19,11 @@ from service_layer.events.base import (
 )
 from service_layer.exceptions.mediator import (
     CommandHandlersNotRegisteredException,
-    EventHandlersNotRegisteredException,
     QueryHandlerNotRegisteredException,
 )
+from service_layer.mediator.command import CommandMediator
+from service_layer.mediator.event import EventMediator
+from service_layer.mediator.query import QueryMediator
 from service_layer.queries.base import (
     BaseQuery,
     QR,
@@ -31,7 +33,7 @@ from service_layer.queries.base import (
 
 
 @dataclass(eq=False)
-class Mediator:
+class Mediator(CommandMediator, EventMediator, QueryMediator):
     events_map: dict[ET, list[EventHandler]] = field(
         default_factory=lambda: defaultdict(list),
         kw_only=True,
@@ -55,17 +57,13 @@ class Mediator:
         self.queries_map[query] = query_handler
 
     async def publish(self, events: Iterable[BaseEvent]) -> Iterable[ER]:
-        event_type = events.__class__
-        handlers = self.events_map.get(event_type)
-
-        if not handlers:
-            raise EventHandlersNotRegisteredException(event_type=event_type)
-
         result = []
+
         for event in events:
+            handlers: Iterable[EventHandler] = self.events_map[event.__class__]
             result.extend([await handler.handle(event) for handler in handlers])
 
-        return [await handler.handle(event) for handler in handlers]
+        return result
 
     async def handle_command(self, command: BaseCommand) -> Iterable[CR]:
         command_type = command.__class__

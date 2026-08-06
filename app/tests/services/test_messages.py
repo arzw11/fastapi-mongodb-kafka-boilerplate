@@ -6,7 +6,7 @@ from domain.values.messages import Title
 from infrastructure.repositories.messages.base import BaseChatsRepository
 from service_layer.commands.messages import CreateChatCommand
 from service_layer.exceptions.messages import ChatWithThatTitleAlreadyExistsException
-from service_layer.mediator import Mediator
+from service_layer.mediator.base import Mediator
 
 
 @pytest.mark.asyncio

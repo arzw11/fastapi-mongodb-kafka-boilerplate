@@ -10,7 +10,10 @@ from punq import (
     Scope,
 )
 
-from domain.events.messages import NewChatCreatedEvent
+from domain.events.messages import (
+    ChatCreatedRecievedFromBrokerEvent,
+    NewChatCreatedEvent,
+)
 from infrastructure.message_brokers.base import BaseMessageBroker
 from infrastructure.message_brokers.kafka import KafkaMessageBroker
 from infrastructure.repositories.messages.base import (
@@ -28,7 +31,10 @@ from service_layer.commands.messages import (
     CreateMessageCommand,
     CreateMessageCommandHandler,
 )
-from service_layer.events.messages import NewChatCreatedEventHanlder
+from service_layer.events.messages import (
+    ChatCreatedRecievedFromBrokerEventHandler,
+    NewChatCreatedEventHanlder,
+)
 from service_layer.mediator.base import Mediator
 from service_layer.queries.messages import (
     GetChatDetailQuery,
@@ -46,8 +52,7 @@ def get_container() -> Container:
 def _init_container() -> Container:
     container: Container = Container()
 
-    container.register(CreateChatCommandHandler)
-
+    # database
     def create_mongodb_client():
         return AsyncIOMotorClient(
             settings.MONGO_DB_CONNECTION_URI,
@@ -57,6 +62,7 @@ def _init_container() -> Container:
     container.register(AsyncIOMotorClient, factory=create_mongodb_client, scope=Scope.singleton)
     mongodb_client = container.resolve(AsyncIOMotorClient)
 
+    # repositories
     def init_chat_mongo_db_repository() -> BaseChatsRepository:
         return MongoDBChatsRepository(
             mongo_db_client=mongodb_client,
@@ -85,9 +91,10 @@ def _init_container() -> Container:
     # message broker
     def init_kafka_message_broker() -> BaseMessageBroker:
         return KafkaMessageBroker(
-            producer=AIOKafkaProducer(bootstrap_servers=settings.KAFKA_URL),
+            producer=AIOKafkaProducer(bootstrap_servers=settings.kafka_url),
             consumer=AIOKafkaConsumer(
-                bootstrap_servers=settings.KAFKA_URL,
+                bootstrap_servers=settings.kafka_url,
+                metadata_max_age_ms=300000,
             ),
         )
 
@@ -100,14 +107,27 @@ def _init_container() -> Container:
     def init_mediator() -> Mediator:
         mediator: Mediator = Mediator()
 
+        # events
         mediator.register_event(
             NewChatCreatedEvent,
-            NewChatCreatedEventHanlder(
-                message_broker=container.resolve(BaseMessageBroker),
-                broker_topic=settings.KAFKA_NEW_CHATS_TOPIC,
-            ),
+            [
+                NewChatCreatedEventHanlder(
+                    message_broker=container.resolve(BaseMessageBroker),
+                    broker_topic=settings.KAFKA_NEW_CHATS_TOPIC,
+                ),
+            ],
+        )
+        mediator.register_event(
+            ChatCreatedRecievedFromBrokerEvent,
+            [
+                ChatCreatedRecievedFromBrokerEventHandler(
+                    message_broker=container.resolve(BaseMessageBroker),
+                    broker_topic=settings.KAFKA_NEW_CHATS_TOPIC,
+                ),
+            ],
         )
 
+        # commands
         mediator.register_command(
             CreateChatCommand,
             [
@@ -128,6 +148,7 @@ def _init_container() -> Container:
             ],
         )
 
+        # queries
         mediator.register_query(
             GetChatDetailQuery,
             GetChatDetailQueryHandler(chat_repository=container.resolve(BaseChatsRepository)),

@@ -1,7 +1,13 @@
 import logging
-from dataclasses import dataclass
+from dataclasses import (
+    asdict,
+    dataclass,
+)
 
-from domain.events.messages import NewChatCreatedEvent
+from domain.events.messages import (
+    ChatCreatedRecievedFromBrokerEvent,
+    NewChatCreatedEvent,
+)
 from infrastructure.message_brokers.converters import convert_event_to_message_broker
 from service_layer.events.base import EventHandler
 
@@ -18,3 +24,9 @@ class NewChatCreatedEventHanlder(EventHandler[NewChatCreatedEvent, None]):
             value=convert_event_to_message_broker(event=event),
         )
         logger.debug('Обработалось событие: %s', event.event_title)
+
+
+@dataclass(frozen=True)
+class ChatCreatedRecievedFromBrokerEventHandler(EventHandler[ChatCreatedRecievedFromBrokerEvent, None]):
+    async def handle(self, event: ChatCreatedRecievedFromBrokerEvent) -> None:
+        logger.info('event recieved from broker: %s', asdict(event))

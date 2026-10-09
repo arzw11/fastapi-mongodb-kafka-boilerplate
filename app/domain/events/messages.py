@@ -19,3 +19,11 @@ class NewChatCreatedEvent(BaseEvent):
 
     chat_oid: str
     chat_title: str
+
+
+@dataclass
+class ChatCreatedRecievedFromBrokerEvent(BaseEvent):
+    event_title: ClassVar[str] = 'Chat Created Recieved From Broker'
+
+    chat_oid: str
+    chat_title: str
